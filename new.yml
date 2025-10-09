@@ -1,0 +1,23 @@
+- name: Web server setup (install + create user dirs)
+  hosts: web_servers
+  gather_facts: yes
+
+  tasks: 
+    - name: Install apache (system-level)
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+      become: yes
+
+    - name: Create user directories inside target user's home
+      ansible.builtin.file:
+        path: "~/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - test_d1
+        - test_d2
+        - test_d3
+      become: yes
+      become_user: "{{ target_user }}"
+ 

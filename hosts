@@ -42,7 +42,8 @@
 
 #db-[99:101]-node.example.com
 
-[ubuntu]
-192.168.56.101
-192.168.56.102
-192.168.56.103
+[web_servers]
+Workstation ansible_hosts=192.168.56.101 ansible_user=erebete target_user=erebete
+server1  ansible_host=192.168.56.102 ansible_user=erebete target_user=erebete
+server2  ansible_host=192.168.56.103 ansible_user=erebete target_user=erebete
+
