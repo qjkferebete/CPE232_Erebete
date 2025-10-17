@@ -1,0 +1,52 @@
+---
+- name: Build and Deploy Custom Nginx Container
+  hosts: all
+  become: yes
+  vars:
+    custom_image_tag: my-custom-nginx:1.0
+    container_name: webserver_prod
+    host_port: 8080
+    build_context_path: /tmp/nginx_build  # Temp directory on target node for build
+
+  tasks:
+    # Task 1: Prepare the build context on the remote host
+    - name: Create temporary build directory on remote host
+      ansible.builtin.file:
+        path: "{{ build_context_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy Dockerfile and index.html to remote host
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ build_context_path }}/"
+      loop:
+        - Dockerfile
+        - index.html
+
+    # Task 2: Build the custom Docker image
+    - name: Build the custom Nginx image
+      community.docker.docker_image:
+        build:
+          path: "{{ build_context_path }}"
+        name: "{{ custom_image_tag }}"
+        source: build
+        state: present
+        # This ensures the build is performed on the remote host
+        # Requires docker-ce to be installed (from your previous playbook)
+
+    # Task 3: Deploy and run the container using the new image
+    - name: Create and run the custom Nginx container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ custom_image_tag }}" # Use the custom image tag
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ host_port }}:80"
+          
+    # Task 4: Clean up the temporary build context
+    - name: Remove temporary build directory
+      ansible.builtin.file:
+        path: "{{ build_context_path }}"
+        state: absent
